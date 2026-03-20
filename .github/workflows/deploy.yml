@@ -1,4 +1,4 @@
-name: Docker CI/CD to AWS
+name: Full CI/CD Pipeline (Frontend + Backend)
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
 
 env:
   AWS_REGION: ap-southeast-1
-  ECR_REPOSITORY: myapp
+  BACKEND_REPO: backend
+  FRONTEND_REPO: frontend
 
 jobs:
   deploy:
@@ -15,9 +16,11 @@ jobs:
 
     steps:
 
+    # 1️⃣ Checkout code
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # 2️⃣ Configure AWS
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -25,30 +28,59 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
+    # 3️⃣ Create ECR repos if not exist
+    - name: Create ECR repositories
+      run: |
+        aws ecr describe-repositories --repository-names $BACKEND_REPO --region $AWS_REGION || \
+        aws ecr create-repository --repository-name $BACKEND_REPO --region $AWS_REGION
+
+        aws ecr describe-repositories --repository-names $FRONTEND_REPO --region $AWS_REGION || \
+        aws ecr create-repository --repository-name $FRONTEND_REPO --region $AWS_REGION
+
+    # 4️⃣ Login to ECR
     - name: Login to ECR
       run: |
         aws ecr get-login-password --region $AWS_REGION | \
         docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
 
-    - name: Build Docker Image
+    # 5️⃣ Build Backend
+    - name: Build Backend Image
       run: |
-        docker build -t myapp .
+        docker build -t backend ./backend
 
-    - name: Tag Image
+    # 6️⃣ Build Frontend
+    - name: Build Frontend Image
       run: |
-        docker tag myapp:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/myapp:latest
+        docker build -t frontend ./frontend
 
-    - name: Push to ECR
+    # 7️⃣ Tag Backend
+    - name: Tag Backend
       run: |
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/myapp:latest
+        docker tag backend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:latest
 
-    - name: Deploy via Bastion
+    # 8️⃣ Tag Frontend
+    - name: Tag Frontend
+      run: |
+        docker tag frontend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
+
+    # 9️⃣ Push Backend
+    - name: Push Backend
+      run: |
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:latest
+
+    # 🔟 Push Frontend
+    - name: Push Frontend
+      run: |
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
+
+    # 1️⃣1️⃣ Deploy to EC2 via Bastion
+    - name: Deploy to Private EC2
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/awskey.pem
-        chmod 600 ~/.ssh/awskey.pem
+        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/key.pem
+        chmod 600 ~/.ssh/key.pem
 
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/awskey.pem ubuntu@${{ secrets.BASTION_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ubuntu@${{ secrets.BASTION_HOST }} << 'EOF'
 
         ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_IP }} << 'INNER'
 

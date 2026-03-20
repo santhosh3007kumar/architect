@@ -14,18 +14,29 @@ const db = mysql.createConnection({
 // Connect DB
 db.connect(err => {
   if (err) {
-    console.error("DB connection failed:", err);
+    console.error("DB connection failed ❌:", err);
   } else {
     console.log("Connected to RDS ✅");
   }
 });
 
-// API route
+
+// ✅ HEALTH CHECK (ADD THIS)
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
+
+// ✅ API route
 app.get("/api", (req, res) => {
   db.query("SELECT NOW()", (err, result) => {
-    if (err) return res.send("DB Error ❌");
+    if (err) {
+      console.error(err);
+      return res.status(500).send("DB Error ❌");
+    }
     res.send("DB Connected: " + result[0]["NOW()"]);
   });
 });
 
-app.listen(3000, () => console.log("Server running"));
+
+app.listen(3000, () => console.log("Server running on port 3000 🚀"));
