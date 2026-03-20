@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My App</title>
+</head>
+<body>
+  <h1>Hello from Frontend 🚀</h1>
+  <button onclick="callAPI()">Call Backend</button>
+
+  <script>
+    function callAPI() {
+      fetch("/api")
+        .then(res => res.text())
+        .then(data => alert(data));
+    }
+  </script>
+</body>
+</html>
