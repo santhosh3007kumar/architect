@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My App</title>
+  <title>Login - My App</title>
 </head>
 <body>
-  <h1>Hello from Frontend 🚀</h1>
-  <button onclick="callAPI()">Call Backend</button>
+  <h2>Login 🔐</h2>
+
+  <input type="text" id="username" placeholder="Username" />
+  <br><br>
+  <input type="password" id="password" placeholder="Password" />
+  <br><br>
+
+  <button onclick="login()">Login</button>
 
   <script>
-    function callAPI() {
-      fetch("/api")
-        .then(res => res.text())
-        .then(data => alert(data));
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.text())
+      .then(data => alert(data));
     }
   </script>
 </body>

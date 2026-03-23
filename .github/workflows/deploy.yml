@@ -72,22 +72,3 @@ jobs:
     - name: Push Frontend
       run: |
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
-
-    # 1️⃣1️⃣ Deploy to EC2 via Bastion
-    - name: Deploy via Bastion (Agent Forwarding)
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/key.pem
-        chmod 600 ~/.ssh/key.pem
-
-        eval "$(ssh-agent -s)"
-        ssh-add ~/.ssh/key.pem
-
-        ssh -A -o StrictHostKeyChecking=no ubuntu@${{ secrets.BASTION_HOST }} << 'EOF'
-
-        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.PRIVATE_IP }} << 'INNER'
-
-        bash /home/ubuntu/deploy.sh
-
-        INNER
-        EOF
