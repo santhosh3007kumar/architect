@@ -71,4 +71,8 @@ jobs:
     # 🔟 Push Frontend
     - name: Push Frontend
       run: |
+<<<<<<< HEAD
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
+=======
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
+>>>>>>> ca6b184fab805450b095dd8d0f5319467cca6ac8
