@@ -33,46 +33,34 @@ jobs:
       run: |
         aws ecr describe-repositories --repository-names $BACKEND_REPO --region $AWS_REGION || \
         aws ecr create-repository --repository-name $BACKEND_REPO --region $AWS_REGION
-
         aws ecr describe-repositories --repository-names $FRONTEND_REPO --region $AWS_REGION || \
         aws ecr create-repository --repository-name $FRONTEND_REPO --region $AWS_REGION
-
     # 4️⃣ Login to ECR
     - name: Login to ECR
       run: |
         aws ecr get-login-password --region $AWS_REGION | \
         docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
-
     # 5️⃣ Build Backend
     - name: Build Backend Image
       run: |
         docker build -t backend ./backend
-
     # 6️⃣ Build Frontend
     - name: Build Frontend Image
       run: |
         docker build -t frontend ./frontend
-
     # 7️⃣ Tag Backend
     - name: Tag Backend
       run: |
         docker tag backend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:latest
-
     # 8️⃣ Tag Frontend
     - name: Tag Frontend
       run: |
         docker tag frontend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
-
     # 9️⃣ Push Backend
     - name: Push Backend
       run: |
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/backend:latest
-
     # 🔟 Push Frontend
     - name: Push Frontend
       run: |
-<<<<<<< HEAD
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
-=======
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:latest
->>>>>>> ca6b184fab805450b095dd8d0f5319467cca6ac8
